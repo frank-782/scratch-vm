@@ -26,7 +26,8 @@ const builtinExtensions = {
     gdxfor: () => require('../extensions/scratch3_gdx_for'),
     javascript: () => require('../extensions/scratch3_javascript'),
     hash: () => require('../extensions/scratch3_hash'),
-    localstorage: () => require('../extensions/scratch3_localstorage')
+    localstorage: () => require('../extensions/scratch3_localstorage'),
+    js: () => require('../extensions/scratch3_js')
 };
 
 /**

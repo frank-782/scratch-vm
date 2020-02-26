@@ -17,7 +17,7 @@ class Scratch3localStorageBlocks {
     constructor (runtime) {
         this.runtime = runtime;
     }
-    getInfo() {
+    getInfo () {
         return {
             id: 'localstorage',
             name: 'localStorage',
