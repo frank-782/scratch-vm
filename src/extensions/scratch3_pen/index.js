@@ -129,12 +129,7 @@ class Scratch3PenBlocks {
      * @private
      */
     _getPenLayerID () {
-        if (this._penSkinId < 0 && this.runtime.renderer) {
-            this._penSkinId = this.runtime.renderer.createPenSkin();
-            this._penDrawableId = this.runtime.renderer.createDrawable(StageLayering.PEN_LAYER);
-            this.runtime.renderer.updateDrawableProperties(this._penDrawableId, {skinId: this._penSkinId});
-        }
-        return this._penSkinId;
+        return this.runtime.getPenLayerID();
     }
 
     /**
@@ -307,6 +302,21 @@ class Scratch3PenBlocks {
                         default: 'stamp',
                         description: 'render current costume on the background'
                     })
+                },
+                {
+                    opcode: 'print',
+                    blockType: BlockType.COMMAND,
+                    text: formatMessage({
+                        id: 'pen.print',
+                        default: 'print [TEXT]',
+                        description: 'start leaving a trail when the sprite moves'
+                    }),
+                    arguments: {
+                        TEXT: {
+                            type: ArgumentType.STRING,
+                            defaultValue: 'Hello World!'
+                        }
+                    }
                 },
                 {
                     opcode: 'penDown',
@@ -530,6 +540,26 @@ class Scratch3PenBlocks {
             this.runtime.requestRedraw();
         }
     }
+
+    print (args, util) {
+        const penAttributes = this._getPenState(util.target).penAttributes;
+        const penSkinId = this._getPenLayerID();
+        const skin = util.target.runtime.renderer._allSkins[penSkinId];
+        const ctx = skin._canvas.getContext('2d');
+        ctx.save();
+        /* eslint-disable-next-line no-mixed-operators,max-len */
+        ctx.translate(util.target.runtime.constructor.STAGE_WIDTH / 2 + util.target.x, util.target.runtime.constructor.STAGE_HEIGHT / 2 - util.target.y + Math.max(12, penAttributes.diameter));
+        ctx.font = `normal ${Math.max(12, penAttributes.diameter)}px Arial`;
+        skin._setAttributes(ctx, penAttributes);
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.rotate(2 * Math.PI * (util.target.direction - 90) / 360);
+
+
+        ctx.fillText(args.TEXT, 0, 0);
+        ctx.restore();
+        skin._canvasDirty = true;
+    }
+
 
     /**
      * The pen "pen up" block stops the target from leaving pen trails.

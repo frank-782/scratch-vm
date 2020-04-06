@@ -254,6 +254,18 @@ class Runtime extends EventEmitter {
         this._nonMonitorThreadCount = 0;
 
         /**
+         * The ID of the renderer Drawable corresponding to the pen layer.
+         * @type {int}
+         */
+        this.penDrawableId = -1;
+
+        /**
+         * The ID of the renderer Skin corresponding to the pen layer.
+         * @type {int}
+         */
+        this.penSkinId = -1;
+
+        /**
          * All threads that finished running and were removed from this.threads
          * by behaviour in Sequencer.stepThreads.
          * @type {Array<Thread>}
@@ -1524,6 +1536,20 @@ class Runtime extends EventEmitter {
             this._hats[opcode].edgeActivated;
     }
 
+    /**
+     * Retrieve the ID of the renderer "Skin" corresponding to the pen layer. If
+     * the pen Skin doesn't yet exist, create it.
+     * @returns {int} the Skin ID of the pen layer, or -1 on failure.
+     */
+    getPenLayerID () {
+        if (this.penSkinId < 0 && this.renderer) {
+            this.penSkinId = this.renderer.createPenSkin();
+            this.penDrawableId = this.renderer.createDrawable(StageLayering.PEN_LAYER);
+            this.renderer.updateDrawableProperties(this.penDrawableId, {skinId: this.penSkinId});
+        }
+        return this.penSkinId;
+    }
+
 
     /**
      * Attach the audio engine
@@ -2121,6 +2147,15 @@ class Runtime extends EventEmitter {
         }
     }
 
+    setTPS (tps) {
+        this.TPS = tps;
+        if (this._steppingInterval) {
+            clearInterval(this._steppingInterval);
+            this._steppingInterval = null;
+            this.start();
+        }
+    }
+
     /**
      * Emit glows/glow clears for scripts after a single tick.
      * Looks at `this.threads` and notices which have turned on/off new glows.
@@ -2544,9 +2579,15 @@ class Runtime extends EventEmitter {
         if (this._steppingInterval) return;
 
         let interval = Runtime.THREAD_STEP_INTERVAL;
+
         if (this.compatibilityMode) {
             interval = Runtime.THREAD_STEP_INTERVAL_COMPATIBILITY;
         }
+        if (this.TPS) {
+            interval = this.TPS;
+            this.TPS = null;
+        }
+        
         this.currentStepTime = interval;
         this._steppingInterval = setInterval(() => {
             this._step();

@@ -27,7 +27,12 @@ const builtinExtensions = {
     javascript: () => require('../extensions/scratch3_javascript'),
     hash: () => require('../extensions/scratch3_hash'),
     localstorage: () => require('../extensions/scratch3_localstorage'),
-    js: () => require('../extensions/scratch3_js')
+    js: () => require('../extensions/scratch3_js'),
+    fps: () => require('../extensions/scratch3_fps'),
+    canvas: () => require('../extensions/scratch3_canvas'),
+    community: () => require('../extensions/scratch3_community'),
+    puzzle: () => require('../extensions/scratch3_puzzle'),
+    lazyAudio: () => require('../extensions/scratch3_lazy_audio')
 };
 
 /**

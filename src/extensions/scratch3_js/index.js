@@ -1,67 +1,108 @@
+/* eslint-disable */
+const Variable = require('../../engine/variable');
 const ArgumentType = require('../../extension-support/argument-type');
 const BlockType = require('../../extension-support/block-type');
-const log = require('../../util/log');
-const Variable = require('../../engine/variable');
+const Cast = require('../../util/cast');
 
 /**
- * Icon png to be displayed at the left edge of each extension block, encoded as a data URI.
+ * Icon svg to be displayed at the left edge of each extension block, encoded as a data URI.
  * @type {string}
  */
-// eslint-disable-next-line max-len
-const blockIconURL = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSLlm77lsYJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiCgkgdmlld0JveD0iMCAwIDEyOCAxMjgiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDEyOCAxMjg7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4KPHN0eWxlIHR5cGU9InRleHQvY3NzIj4KCS5zdDB7ZmlsbDojRkZGRkZGO30KPC9zdHlsZT4KPHBhdGggY2xhc3M9InN0MCIgZD0iTTEwNy4xLDU2LjVoLTYuOVYzNy44YzAtNS00LjQtOS40LTkuNC05LjRINzIuMXYtNy41QzcxLjUsMTQsNjUuOSw5LDU5LjYsOWMtNi45LDAtMTEuOSw1LTExLjksMTEuOXY2LjlIMjkKCWMtNS42LDAtMTAsNC40LTEwLDEwdjE4LjFoNi45QzMyLjgsNTUuOSwzOSw2MS41LDM5LDY5YzAsNi45LTUuNiwxMy4xLTEzLjEsMTMuMUgxOXYxOC4xYzAsNC40LDQuNCw4LjgsOS40LDguOGgxOC4xdi02LjkKCWMwLTYuOSw1LjYtMTMuMSwxMy4xLTEzLjFjNi45LDAsMTMuMSw1LjYsMTMuMSwxMy4xdjYuOWgxOC4xYzUsMCw5LjQtNC40LDkuNC05LjRWODAuOWg2LjljNi45LDAsMTEuOS01LDExLjktMTEuOQoJQzExOSw2MS41LDExNCw1Ni41LDEwNy4xLDU2LjV6IE02NS43LDgyLjNoLTUuNWMtMTAuMiwwLTE0LjctNS4yLTE1LjEtNS43bDYuOC02LjZjMC4xLDAuMSwyLjQsMi42LDguMywyLjZoMS4zCgljMywwLDYuMi0wLjQsNi4yLTIuMWMwLTEuOS01LjItMi44LTcuNy0zLjFjLTMuMS0wLjQtNi4zLTAuOS05LjEtMi4yYy0xLjgtMC45LTMuMy0yLjEtNC4zLTMuNmMtMS4yLTEuNy0xLjgtMy43LTEuOC01LjkKCWMwLTcuMiw3LjMtMTEuOSwxNy45LTExLjloMS44YzYuMiwwLDExLjMsMi41LDE1LjQsNy4ybC02LjcsNi41Yy0yLjItMi43LTQuOS0zLjktOC41LTMuOWgtMC40Yy0xLjksMC02LjItMC40LTYuMiwyLjEKCWMwLDEuOCw0LjksMi42LDcuNCwyLjljMy4xLDAuNCw2LjUsMSw5LjIsMi4yYzEuOCwwLjksMy4zLDIuMSw0LjQsMy43YzEuMSwxLjcsMS44LDMuOCwxLjgsNi4xQzgwLjksODAuNSw2OS42LDgyLjMsNjUuNyw4Mi4zeiIvPgo8L3N2Zz4=';
+
+const blockIconURI = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSLlm77lsYJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiCgkgdmlld0JveD0iLTQxNSAyMTcgMTI4IDEyOCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAtNDE1IDIxNyAxMjggMTI4OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+Cgkuc3Qwe2ZpbGw6I0ZGRkZGRjt9Cjwvc3R5bGU+CjxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0tMzA5LjIsMjc4LjVoLTYuOXYtMTguN2MwLTUtNC40LTkuNC05LjQtOS40aC0xOC43di03LjVjLTAuNi02LjktNi4yLTExLjktMTIuNS0xMS45Yy02LjksMC0xMS45LDUtMTEuOSwxMS45Cgl2Ni45aC0xOC43Yy01LjYsMC0xMCw0LjQtMTAsMTB2MTguMWg2LjljNi45LDAsMTMuMSw1LjYsMTMuMSwxMy4xYzAsNi45LTUuNiwxMy4xLTEzLjEsMTMuMWgtNi45djE4LjFjMCw0LjQsNC40LDguOCw5LjQsOC44aDE4LjEKCXYtNi45YzAtNi45LDUuNi0xMy4xLDEzLjEtMTMuMWM2LjksMCwxMy4xLDUuNiwxMy4xLDEzLjF2Ni45aDE4LjFjNSwwLDkuNC00LjQsOS40LTkuNHYtMTguN2g2LjljNi45LDAsMTEuOS01LDExLjktMTEuOQoJQy0yOTcuMywyODMuNS0zMDIuMywyNzguNS0zMDkuMiwyNzguNXogTS0zNDIuNywyOTEuNWMwLDguMS00LjMsMTQuOC0xMy42LDE0LjhjLTYuNSwwLTEwLjctMi41LTEzLjctNy42bDYuOC01LjEKCWMxLjQsMi44LDMuNiw0LjEsNS42LDQuMWMzLjIsMCw1LTEuNiw1LTdWMjY0aDEwVjI5MS41eiIvPgo8L3N2Zz4=';
+const menuIconURI = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSLlm77lsYJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiCgkgdmlld0JveD0iLTQxNSAyMTcgMTI4IDEyOCIgc3R5bGU9ImVuYWJsZS1iYWNrZ3JvdW5kOm5ldyAtNDE1IDIxNyAxMjggMTI4OyIgeG1sOnNwYWNlPSJwcmVzZXJ2ZSI+CjxwYXRoIHN0eWxlPSJmaWxsOiMxMjk2REI7IiBkPSJNLTMwNC4yLDI3OC41aC02Ljl2LTE4LjdjMC01LTQuNC05LjQtOS40LTkuNGgtMTguN3YtNy41Yy0wLjYtNi45LTYuMi0xMS45LTEyLjUtMTEuOQoJYy02LjksMC0xMS45LDUtMTEuOSwxMS45djYuOWgtMTguN2MtNS42LDAtMTAsNC40LTEwLDEwdjE4LjFoNi45YzYuOSwwLDEzLjEsNS42LDEzLjEsMTMuMWMwLDYuOS01LjYsMTMuMS0xMy4xLDEzLjFoLTYuOXYxOC4xCgljMCw0LjQsNC40LDguOCw5LjQsOC44aDE4LjF2LTYuOWMwLTYuOSw1LjYtMTMuMSwxMy4xLTEzLjFjNi45LDAsMTMuMSw1LjYsMTMuMSwxMy4xdjYuOWgxOC4xYzUsMCw5LjQtNC40LDkuNC05LjR2LTE4LjdoNi45CgljNi45LDAsMTEuOS01LDExLjktMTEuOUMtMjkyLjMsMjgzLjUtMjk3LjMsMjc4LjUtMzA0LjIsMjc4LjV6IE0tMzM3LjcsMjkxLjVjMCw4LjEtNC4zLDE0LjgtMTMuNiwxNC44Yy02LjUsMC0xMC43LTIuNS0xMy43LTcuNgoJbDYuOC01LjFjMS40LDIuOCwzLjYsNC4xLDUuNiw0LjFjMy4yLDAsNS0xLjYsNS03VjI2NGgxMEwtMzM3LjcsMjkxLjVMLTMzNy43LDI5MS41eiIvPgo8L3N2Zz4=';
 
 /**
- * Url of icon to be displayed in the toolbox menu for the extension category.
- * @type {string}
- */
-// eslint-disable-next-line max-len
-const menuIconURI = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPHN2ZyB2ZXJzaW9uPSIxLjEiIGlkPSLlm77lsYJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxuczp4bGluaz0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayIgeD0iMHB4IiB5PSIwcHgiCgkgdmlld0JveD0iMCAwIDEyOCAxMjgiIHN0eWxlPSJlbmFibGUtYmFja2dyb3VuZDpuZXcgMCAwIDEyOCAxMjg7IiB4bWw6c3BhY2U9InByZXNlcnZlIj4KPHN0eWxlIHR5cGU9InRleHQvY3NzIj4KCS5zdDB7ZmlsbDojMTI5NmRiO30KPC9zdHlsZT4KPHBhdGggY2xhc3M9InN0MCIgZD0iTTEwNy4xLDU2LjVoLTYuOVYzNy44YzAtNS00LjQtOS40LTkuNC05LjRINzIuMXYtNy41QzcxLjUsMTQsNjUuOSw5LDU5LjYsOWMtNi45LDAtMTEuOSw1LTExLjksMTEuOXY2LjlIMjkKCWMtNS42LDAtMTAsNC40LTEwLDEwdjE4LjFoNi45QzMyLjgsNTUuOSwzOSw2MS41LDM5LDY5YzAsNi45LTUuNiwxMy4xLTEzLjEsMTMuMUgxOXYxOC4xYzAsNC40LDQuNCw4LjgsOS40LDguOGgxOC4xdi02LjkKCWMwLTYuOSw1LjYtMTMuMSwxMy4xLTEzLjFjNi45LDAsMTMuMSw1LjYsMTMuMSwxMy4xdjYuOWgxOC4xYzUsMCw5LjQtNC40LDkuNC05LjRWODAuOWg2LjljNi45LDAsMTEuOS01LDExLjktMTEuOQoJQzExOSw2MS41LDExNCw1Ni41LDEwNy4xLDU2LjV6IE02NS43LDgyLjNoLTUuNWMtMTAuMiwwLTE0LjctNS4yLTE1LjEtNS43bDYuOC02LjZjMC4xLDAuMSwyLjQsMi42LDguMywyLjZoMS4zCgljMywwLDYuMi0wLjQsNi4yLTIuMWMwLTEuOS01LjItMi44LTcuNy0zLjFjLTMuMS0wLjQtNi4zLTAuOS05LjEtMi4yYy0xLjgtMC45LTMuMy0yLjEtNC4zLTMuNmMtMS4yLTEuNy0xLjgtMy43LTEuOC01LjkKCWMwLTcuMiw3LjMtMTEuOSwxNy45LTExLjloMS44YzYuMiwwLDExLjMsMi41LDE1LjQsNy4ybC02LjcsNi41Yy0yLjItMi43LTQuOS0zLjktOC41LTMuOWgtMC40Yy0xLjksMC02LjItMC40LTYuMiwyLjEKCWMwLDEuOCw0LjksMi42LDcuNCwyLjljMy4xLDAuNCw2LjUsMSw5LjIsMi4yYzEuOCwwLjksMy4zLDIuMSw0LjQsMy43YzEuMSwxLjcsMS44LDMuOCwxLjgsNi4xQzgwLjksODAuNSw2OS42LDgyLjMsNjUuNyw4Mi4zeiIvPgo8L3N2Zz4='
-
-/**
- * Class for the JS blocks.
+ * Host for the Pen-related blocks in Scratch 3.0
+ * @param {Runtime} runtime - the runtime instantiating this block package.
  * @constructor
  */
-class Scratch3JSBlocks {
+class Scratch3JsBlocks {
     constructor (runtime) {
+        /**
+         * The runtime instantiating this block package.
+         * @type {Runtime}
+         */
         this.runtime = runtime;
+        this.runtime.on('PROJECT_STOP_ALL', this._init.bind(this));
+        // this.runtime.on('PROJECT_START', this._init.bind(this));
     }
+
+    /**
+     * @returns {object} metadata for this extension and its blocks.
+     */
     getInfo () {
         return {
             id: 'js',
-            name: 'Javascript Extensions',
-            blockIconURI: blockIconURL,
+            name: 'JavaScript',
+            blockIconURI: blockIconURI,
             menuIconURI: menuIconURI,
-            blocks: [
-                {
-                    opcode: 'serializeToJson',
-                    blockType: BlockType.REPORTER,
-                    text: '将[PREFIX]开头的变量转换为JSON',
-                    arguments: {
-                        PREFIX: {
-                            type: ArgumentType.STRING,
-                            defaultValue: '.'
-                        }
+            blocks: [{
+                opcode: 'serializeToJson',
+                blockType: BlockType.REPORTER,
+                text: '将[PREFIX]开头的变量转换为JSON',
+                arguments: {
+                    PREFIX: {
+                        type: ArgumentType.STRING,
+                        defaultValue: '.'
                     }
-                },
-                {
-                    opcode: 'deserializeFromJson',
-                    blockType: BlockType.COMMAND,
-                    text: '将[PREFIX]开头的变量设为JSON[JSON]',
-                    arguments: {
-                        JSON: {
-                            type: ArgumentType.STRING,
-                            defaultValue: '{}'
-                        },
-                        PREFIX: {
-                            type: ArgumentType.STRING,
-                            defaultValue: '.'
-                        }
+                }
+            },
+            {
+                opcode: 'deserializeFromJson',
+                blockType: BlockType.COMMAND,
+                text: '将[PREFIX]开头的变量设为JSON[JSON]',
+                arguments: {
+                    JSON: {
+                        type: ArgumentType.STRING,
+                        defaultValue: '{}'
+                    },
+                    PREFIX: {
+                        type: ArgumentType.STRING,
+                        defaultValue: '.'
                     }
-                },
-                {
-                    opcode: 'callWorker',
+                }
+            },
+            {
+                opcode: 'postJson',
+                blockType: BlockType.COMMAND,
+                text: '发送JSON[JSON]到[URL]',
+                arguments: {
+                    JSON: {
+                        type: ArgumentType.STRING,
+                        defaultValue: '{"action":"save","userId":1,"readOnly":1,"name":"","value":[]}'
+                    },
+                    URL: {
+                        type: ArgumentType.STRING,
+                        menu: 'urlNames',
+                        defaultValue: 'cloudSpace'
+                    }
+                }
+            },
+            {
+                opcode: 'postResponse',
+                blockType: BlockType.REPORTER,
+                text: '发送JSON应答'
+            },
+            {
+                opcode: 'callWorker',
+                blockType: BlockType.REPORTER,
+                text: 'callWorker([WORKER_ID],[MESSAGE])',
+                arguments: {
+                    WORKER_ID: {
+                        type: ArgumentType.STRING,
+                        defaultValue: 1
+                    },
+                    MESSAGE: {
+                        type: ArgumentType.STRING,
+                        defaultValue: '{}'
+                    }
+                }
+            }
+                /* {
+                    opcode: 'callFunction',
                     blockType: BlockType.REPORTER,
-                    text: 'callWorker([WORKER_ID],[MESSAGE])',
+                    text: 'callFunction([PACKAGE_ID],[NAME],[PARAMS])',
                     arguments: {
                         WORKER_ID: {
                             type: ArgumentType.STRING,
@@ -72,82 +113,165 @@ class Scratch3JSBlocks {
                             defaultValue: '{}'
                         }
                     }
+                },*/
+            ],
+            menus: {
+                urlNames: {
+                    acceptReporters: true,
+                    items: [{
+                        text: '云空间',
+                        value: 'cloudSpace'
+                    }]
                 }
-            ]
+            }
         };
     }
-    serializeToJson (args, vm) {
-        const t = args.PREFIX.toString().trim();
-        const n = {};
-        const r = vm.target.variables;
-        for (const i in r) {
-            const o = r[i];
-            // eslint-disable-next-line max-len,eqeqeq,no-mixed-operators,no-unused-expressions
-            o.type != Variable.SCALAR_TYPE && o.type != Variable.LIST_TYPE || o.name.indexOf(t) == 0 && (n[o.name.substr(t.length)] = o.value);
-        }
-        return JSON.stringify(n);
-    }
 
-    deserializeFromJson (args, vm) {
-        const t = args.PREFIX.toString();
-        const js = args.JSON;
-        let r;
-        try {
-            r = JSON.parse(js);
-            // eslint-disable-next-line no-empty
-        } catch (e) { }
-        if (r) {
-            const i = vm.target.variable;
-            /* eslint-disable */
-            for (let o in i) {
-                let u = i[o]
-                let s;
-                if (0 == u.name.indexOf(t) && (s = r[u.name.substr(t.length)]),
-                null != s)
-                    if (u.type == Variable.LIST_TYPE && Array.isArray(s)) {
-                        for (let c = 0; c < s.length; c++)
-                            null == s[c] && (s[c] = '');
-                        u.value = s
-                    } else
-                        u.type == Variable.SCALAR_TYPE && (u.value = String(s));
+    _init () {
+        if (this._workers) {
+            for (const workerId in this._workers) {
+                const worker = this._workers[workerId];
+                if (worker) worker.terminate();
             }
-            /* eslint-enable */
+            this._workers = null;
         }
-
     }
 
-    callWorker (args, vm){
-        if (typeof Worker !== 'undefined') {
-            const WorkId = args.WORKER_ID;
-            const Message = args.MESSAGE;
-            return new Promise((A => {
-                let worker;
-                try {
-                    (worker = new Worker(`/static/Worker/${WorkId}.js`)).onmessage = d => {
-                        worker.terminate();
-                        A(JSON.stringify(d.data));
-                    };
-
-                    worker.onerror = err => {
-                        worker.terminate();
-                        log.error(`Worker Error: ${err.message}`);
-                        A('');
-                    };
-                    worker.postMessage(JSON.parse(Message));
-                } catch (t) {
-                    log.error(t);
-                    worker.terminate();
-                    A('');
+    serializeToJson (args, util) {
+        const prefix = Cast.toString(args.PREFIX).trim();
+        const jsonObj = {};
+        const variables = util.target.variables;
+        for (const varId in variables) {
+            const variable = variables[varId];
+            if (variable.type == Variable.SCALAR_TYPE || variable.type == Variable.LIST_TYPE) {
+                if (variable.name.indexOf(prefix) == 0) {
+                    jsonObj[variable.name.substr(prefix.length)] = variable.value;
                 }
-            })
-            );
+            }
         }
-        // eslint-disable-next-line no-alert
-        alert('你的浏览器不支持Worker');
-
+        return JSON.stringify(jsonObj);
     }
 
+    deserializeFromJson (args, util) {
+        const prefix = Cast.toString(args.PREFIX).trim();
+        const jsonStr = args.JSON;
+        let jsonObj = null;
+        try {
+            jsonObj = JSON.parse(jsonStr);
+        } catch (e) {}
+        if (!jsonObj) return;
+        const variables = util.target.variables;
+        for (const varId in variables) {
+            const variable = variables[varId];
+            let varValue = null;
+            if (variable.name.indexOf(prefix) == 0) {
+                varValue = jsonObj[variable.name.substr(prefix.length)];
+            }
+            if (varValue == undefined) continue;
+            if (variable.type == Variable.LIST_TYPE && Array.isArray(varValue)) {
+                for (let i = 0; i < varValue.length; i++) {
+                    if (varValue[i] == null) varValue[i] = '';
+                }
+                variable.value = varValue;
+            } else if (variable.type == Variable.SCALAR_TYPE) {
+                variable.value = String(varValue);
+            }
+        }
+    }
+
+    postJson (args, util) {
+        const axios = window.scratchExt.axios;
+
+        const jsonStr = Cast.toString(args.JSON);
+        let uri = Cast.toString(args.URL).trim();
+        const urlMap = {
+            cloudSpace: '/WebApi/Projects/CloudSpace'
+        };
+        url = urlMap[uri];
+        if (!url) {
+            url = uri
+        }
+        let postData = {};
+        try {
+            postData = JSON.parse(jsonStr);
+        } catch (e) {
+            this._postResponse = {
+                error: 'invalid json'
+            };
+            return;
+        }
+        return new Promise(resolve => {
+            axios({
+                url: url,
+                method: 'post',
+                data: postData
+            }).then(res => {
+                this._postResponse = res.data;
+                resolve();
+            }).catch(() => {
+                this._postResponse = {
+                    error: "unexpected error"
+                };
+                resolve();
+            })
+        });
+    }
+
+    postResponse (args, util) {
+        return JSON.stringify(this._postResponse);
+    }
+
+    _getWorker (workerId) {
+        if (!this._workers) this._workers = {};
+        let worker = this._workers[workerId];
+        if (!worker) {
+            worker = new Worker(`/WebApi/JsWorkers/${workerId}/GetScript`);
+            this._workers[workerId] = worker;
+            worker.addEventListener('error', e => {
+                if (!e.filename) delete this._workers[workerId];
+            });
+        }
+        return worker;
+    }
+
+    callWorker (args, util) {
+        if (typeof (Worker) === 'undefined') {
+            alert('你的浏览器不支持worker');
+            return '';
+        }
+
+        const workerId = Cast.toNumber(args.WORKER_ID);
+        const message = args.MESSAGE;
+        return new Promise(resolve => {
+            const worker = this._getWorker(workerId);
+            const removeListeners = () => {
+                worker.removeEventListener('message', onMessage);
+                worker.removeEventListener('error', onError);
+                worker.removeEventListener('messageerror', onMessageError);
+            };
+            const onMessage = event => {
+                removeListeners();
+                resolve(JSON.stringify(event.data));
+            };
+            const onError = e => {
+                removeListeners();
+                resolve('');
+            };
+            const onMessageError = e => {
+                removeListeners();
+                resolve('');
+            };
+            worker.addEventListener('message', onMessage);
+            worker.addEventListener('error', onError);
+            worker.addEventListener('messageerror', onMessageError);
+            try {
+                worker.postMessage(JSON.parse(message));
+            } catch (e) {
+                removeListeners();
+                resolve('');
+            }
+        });
+    }
 }
 
-
-module.exports = Scratch3JSBlocks;
+module.exports = Scratch3JsBlocks;
