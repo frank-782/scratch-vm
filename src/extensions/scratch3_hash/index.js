@@ -1,6 +1,6 @@
 const ArgumentType = require('../../extension-support/argument-type');
 const BlockType = require('../../extension-support/block-type');
-const CryptoJS = require('crypto-js')
+const CryptoJS = window.CryptoJS;
 
 /**
  * Class for the Hash blocks.
@@ -48,18 +48,18 @@ class Scratch3HashBlocks {
                             defaultValue: 'Hello md5!'
                         }
                     }
-                },
+                }
             ]
-        }
+        };
     }
-    encode_sha1(args){
-        return CryptoJS.SHA1(args.TEXT.toString()).toString()
+    encode_sha1 (args){
+        return CryptoJS.SHA1(args.TEXT.toString()).toString();
     }
-    encode_sha256(args){
-        return CryptoJS.SHA256(args.TEXT.toString()).toString()
+    encode_sha256 (args){
+        return CryptoJS.SHA256(args.TEXT.toString()).toString();
     }
-    encode_md5(args){
-        return CryptoJS.MD5(args.TEXT.toString()).toString()
+    encode_md5 (args){
+        return CryptoJS.MD5(args.TEXT.toString()).toString();
     }
 
 }

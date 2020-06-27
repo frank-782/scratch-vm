@@ -115,7 +115,7 @@ class Scratch3JavaScriptBlocks {
     }
 
     GetJSreturn (){
-        return this._JSreturn
+        return this._JSreturn;
     }
 }
 

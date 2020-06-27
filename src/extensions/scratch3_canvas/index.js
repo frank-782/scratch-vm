@@ -626,8 +626,8 @@ class Scratch3CanvasBlocks {
                 img.onerror = () => {
                     resolve();
                 };
-                const extUtils = this.runtime.extUtils;
-                img.src = extUtils.getAssetFetchUrl(imageId);
+                // const extUtils = this.runtime.extUtils;
+                img.src = `http://${window.location.host}:2345/${imageId};`;// extUtils.getAssetFetchUrl(imageId);
             });
         }
     }
@@ -712,7 +712,7 @@ class Scratch3CanvasBlocks {
     setGlobalCompositeOperation (args) {
         const ctx = this._getContext();
         if (!ctx) return;
-        const compositeOperation = Cast.toNumber(args.CompositeOperation);
+        const compositeOperation = args.CompositeOperation;
         ctx.globalCompositeOperation = compositeOperation;
     }
 
